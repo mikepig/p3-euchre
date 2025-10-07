@@ -7,24 +7,25 @@
 
 
 using namespace std;
-
+const int next_card = 0;
 Pack::Pack(){
-    next = 0;
-    int count=0;
+    next = next_card;
+    int count = 0;
     for (int s = SPADES; s <= DIAMONDS; ++s) {
-        Suit suit = static_cast<Suit>(s);
-        for (int j = TWO; j <=ACE; ++j){
+        for (int j = NINE; j <=ACE; ++j){
+            Suit suit = static_cast<Suit>(s);
             Rank rank = static_cast<Rank>(j);
             Card Card(rank, suit);
-            cards[0] = Card;
-            count+=1;
+            cards[count] = Card;
+            count +=1;
         }
     }
+    
 
 }
 
  Pack::Pack(std::istream& pack_input){
-    next = 0;
+    next = next_card;
     string of;
     Rank rank;
     Suit suit;
@@ -46,19 +47,22 @@ Pack::Pack(){
  }
 
  void Pack::shuffle(){
-
-    std::array<Card, PACK_SIZE> new_pack;
-    for (int i = 0; i<7; ++i){
-        for (int j = 0; int k = 0; j<PACK_SIZE; j+=2;++k){
-            new_pack[j]=cards[j];
-            new_pack[j+1]=cards[j+]
+    int half = PACK_SIZE/2;
+    
+    for (int i = 0;i<7; ++i){
+        std::array<Card, PACK_SIZE> new_pack;
+        int j =0;
+        for (int k = 0;  k<half; ++k){
+            new_pack[j]=cards[half+k];
+            new_pack[j+1]=cards[k];
+            j+=2;
         }
+        cards=new_pack;
     }
+    next = 0;
  }
 
  bool Pack::empty() const{
-    if (cards.size()==0){
-        return true;
+    return next==24;
+
     }
-    return false;
- }

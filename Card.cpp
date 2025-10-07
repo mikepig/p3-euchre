@@ -113,7 +113,7 @@ Suit Card::get_suit() const{
 }
 
 bool Card::is_face_or_ace() const{
-  if (rank == 9 || rank == 10 || rank == 11){
+  if (rank == 9 || rank == 10 || rank == 11|| rank ==12){
     return true;
   }
   return false;
@@ -128,9 +128,9 @@ bool Card::is_right_bower(Suit trump) const{
 
 Suit Suit_next(Suit suit){
   if (suit%2==0){
-    return Suit(suit-1);
+    return Suit(suit-2);
   }
-  return Suit(suit+1);
+  return Suit(suit+2);
 }
 bool Card::is_left_bower(Suit trump) const{
   if (Suit_next(suit) == trump && rank == 9){
@@ -154,14 +154,13 @@ Suit Card::get_suit(Suit trump) const{
 
 //   operator<<
 std::ostream & operator<<(std::ostream &os, const Card &card){
-  os << card.get_rank() << "of" << card.get_suit();
+  os << card.get_rank() << " of " << card.get_suit();
   return os;
 }
 
 
 //   operator>>
 std::istream & operator>>(std::istream &is, Card &card){
-  Card card;
   string waste;
   is >> card.rank;
   is >> waste;
@@ -196,7 +195,7 @@ return false;
 }
 //   operator>
 bool operator>(const Card &lhs, const Card &rhs){
-  if (lhs<rhs){
+  if (lhs<=rhs){
     return false;
   }
   return true;
@@ -230,13 +229,8 @@ bool operator!=(const Card &lhs, const Card &rhs){
 }
 
 bool Card_less(const Card &a, const Card &b, Suit trump){
-  assert(a!=b);
 
-  Suit a_s = a.get_suit(trump);
-  Suit b_s= b.get_suit(trump);
-  Rank a_r = a.get_rank();
-  Rank b_r = b.get_rank();
-  if (a.is_trump(trump) || a.is_right_bower(trump)){
+  if (a.is_right_bower(trump)){
     return false;
   }
   else if (b.is_right_bower(trump)){
@@ -254,12 +248,14 @@ bool Card_less(const Card &a, const Card &b, Suit trump){
     if (!b.is_trump(trump)){
       return false;
     }
-    else if (b.is_left_bower(trump)){
-      return true;
-    }
     else if (a.is_left_bower(trump)){
       return false;
     }
+    else if (b.is_left_bower(trump)){
+      return true;
+    }
+
+    
   }
   else if (b.is_trump(trump)&& !a.is_trump(trump)){
       return true;
@@ -268,8 +264,7 @@ bool Card_less(const Card &a, const Card &b, Suit trump){
 }
 
 bool Card_less(const Card &a, const Card &b, const Card &led_card, Suit trump){
-  assert(a!=b);
-  if (trump == led_card.get_suit() || a.is_trump(trump) || b.is_trump(trump)){
+  if (trump == led_card.get_suit(trump) || a.is_trump(trump) || b.is_trump(trump)){
     return Card_less(a, b, trump);
   }
   else if (a.get_suit()==led_card.get_suit()||b.get_suit()!=led_card.get_suit()){
