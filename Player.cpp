@@ -90,7 +90,7 @@ class SimplePlayer : public Player {
 
 
         Card play_card(const Card &led_card, Suit trump)override{
-            assert(!hand.size()==0);
+            assert(!hand.empty());
             int ind = -1;
             for(int i = 0; i!=hand.size(); i++){
                 if (hand[i].get_suit(trump)==led_card.get_suit(trump)){

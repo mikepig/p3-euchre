@@ -199,4 +199,129 @@ TEST(test_card_less_with_led_bower_aliasing) {
   ASSERT_FALSE(Card_less(left_bower, normal_heart, led_card, trump));
 }
 
+static Card C(Rank r, Suit s){
+   return Card(r,s); 
+  }
+TEST(test_is_left_bower_all_trumps) {
+  ASSERT_TRUE ( C(JACK, CLUBS   ).is_left_bower(SPADES)   );
+  ASSERT_FALSE( C(JACK, SPADES  ).is_left_bower(SPADES)   );
+  ASSERT_TRUE ( C(JACK, DIAMONDS).is_left_bower(HEARTS)   );
+  ASSERT_TRUE ( C(JACK, SPADES  ).is_left_bower(CLUBS)    );
+  ASSERT_TRUE ( C(JACK, HEARTS  ).is_left_bower(DIAMONDS) );
+  ASSERT_FALSE( C(QUEEN, DIAMONDS).is_left_bower(HEARTS)  );
+  ASSERT_FALSE( C(JACK, HEARTS).is_left_bower(SPADES)     );
+}
+TEST(test_is_trump_including_left_bower) {
+  ASSERT_TRUE ( C(TEN,  SPADES).is_trump(SPADES) );
+  ASSERT_TRUE ( C(JACK, CLUBS ).is_trump(SPADES) );
+  ASSERT_TRUE ( C(JACK, SPADES).is_trump(SPADES) );
+  ASSERT_FALSE( C(ACE,  HEARTS).is_trump(SPADES) );
+  ASSERT_FALSE( C(JACK, DIAMONDS).is_trump(SPADES) );
+}
+
+TEST(test_get_suit_with_trump_aliasing) {
+  ASSERT_EQUAL(C(JACK, CLUBS   ).get_suit(SPADES), SPADES);
+  ASSERT_EQUAL(C(JACK, SPADES  ).get_suit(SPADES), SPADES); 
+  ASSERT_EQUAL(C(ACE,  DIAMONDS).get_suit(SPADES), DIAMONDS);
+}
+
+TEST(test_card_less_trump_ordering_core) {
+  Suit T = HEARTS;
+
+  Card right = C(JACK, HEARTS);
+  Card left  = C(JACK, DIAMONDS);
+  Card a     = C(ACE,  HEARTS);
+  Card k     = C(KING, HEARTS);
+  Card q     = C(QUEEN,HEARTS);
+  Card tten  = C(TEN,  HEARTS);
+  Card nine  = C(NINE, HEARTS);
+
+  ASSERT_TRUE(Card_less(left,  right, T));
+  ASSERT_TRUE(Card_less(a,     left,  T));
+  ASSERT_TRUE(Card_less(k,     a,     T));
+  ASSERT_TRUE(Card_less(q,     k,     T));
+  ASSERT_TRUE(Card_less(tten,  q,     T));
+  ASSERT_TRUE(Card_less(nine,  tten,  T));
+
+  Card offA = C(ACE, CLUBS);
+  ASSERT_TRUE(Card_less(offA, nine, T));
+}
+
+TEST(test_card_less_trump_both_offsuit_natural) {
+  Suit T = DIAMONDS;
+  Card a = C(ACE,  SPADES);
+  Card k = C(KING, SPADES);
+  Card q = C(QUEEN,CLUBS);
+  ASSERT_TRUE(Card_less(k, a, T));
+  ASSERT_TRUE(Card_less(q, a, T));
+}
+
+TEST(test_card_less_led_follow_vs_off_no_trump_on_table) {
+  Suit T = CLUBS;
+  Card led = C(TEN, SPADES);
+
+  Card follow_low  = C(NINE,  SPADES);
+  Card follow_high = C(ACE,   SPADES);
+  Card off_any     = C(ACE,   DIAMONDS);
+
+  ASSERT_TRUE(Card_less(off_any, follow_low,  led, T)); 
+  ASSERT_TRUE(Card_less(follow_low, follow_high, led, T));
+  ASSERT_FALSE(Card_less(follow_high, follow_low, led, T));
+}
+
+TEST(test_card_less_led_trump_appears_beats_led_suit) {
+  Suit T = HEARTS;
+  Card led = C(KING, CLUBS);
+
+  Card follower_ace = C(ACE, CLUBS);
+  Card trump_low    = C(NINE, HEARTS);
+
+  ASSERT_TRUE(Card_less(follower_ace, trump_low, led, T));
+  ASSERT_FALSE(Card_less(trump_low, follower_ace, led, T));
+}
+TEST(test_card_less_led_trump_led_bower_ranking) {
+  Suit T = SPADES;
+  Card led = C(NINE, SPADES);
+
+  Card right = C(JACK, SPADES);
+  Card left  = C(JACK, CLUBS);
+  Card ace   = C(ACE,  SPADES);
+
+  ASSERT_TRUE(Card_less(ace, left,  led, T));
+  ASSERT_TRUE(Card_less(left, right, led, T));
+}
+
+TEST(test_card_less_led_left_bower_counts_as_led_trump) {
+  Suit T = HEARTS;
+  Card led = C(TEN, HEARTS);
+
+  Card left  = C(JACK, DIAMONDS);
+  Card aceH  = C(ACE,  HEARTS);
+  ASSERT_TRUE(Card_less(aceH, left, led, T)); 
+}
+
+TEST(test_card_less_trump_antisymmetry_left_vs_ace) {
+  Suit T = HEARTS;
+  Card left = Card(JACK, DIAMONDS);
+  Card ace  = Card(ACE,  HEARTS);
+
+  ASSERT_FALSE(Card_less(left, ace, T));
+  ASSERT_TRUE (Card_less(ace,  left, T));
+}
+
+TEST(test_card_less_led_antisymmetry_follow) {
+  Suit T = CLUBS;
+  Card led = C(NINE, CLUBS);
+  Card x = C(KING, CLUBS);
+  Card y = C(ACE,  CLUBS);
+  ASSERT_TRUE(Card_less(x, y, led, T));
+  ASSERT_FALSE(Card_less(y, x, led, T));
+}
+TEST(test_operator_less_natural_fallback) {
+  Card a = C(TEN, SPADES);
+  Card b = C(JACK, SPADES);
+  Card c = C(JACK, CLUBS);
+  ASSERT_TRUE(a < b);
+  ASSERT_TRUE(c < b == (c.get_rank() < b.get_rank() || (c.get_rank()==b.get_rank() && c.get_suit() < b.get_suit())));
+}
 TEST_MAIN()

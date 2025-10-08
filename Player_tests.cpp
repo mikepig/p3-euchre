@@ -12,12 +12,6 @@ TEST(test_player_get_name) {
     delete alice;
 }
 
-TEST(test_player_get_name) {
-    Player *alice = Player_factory("Alice", "Simple");
-    ASSERT_EQUAL("Alice", alice->get_name());
-    delete alice;
-}
-
 TEST(test_player_factory_human_simple) {
     Player *h = Player_factory("Bob", "Human");
     Player *s = Player_factory("Eve", "Simple");
