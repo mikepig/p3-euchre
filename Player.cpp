@@ -21,8 +21,9 @@ class SimplePlayer : public Player {
         }
 
         void add_card(const Card &c)override{
-            assert(hand.size()<MAX_HAND_SIZE);
+            assert(hand.size()<=MAX_HAND_SIZE);
             hand.push_back(c);
+            std::sort(hand.begin(),hand.end()); 
         }
         bool make_trump(const Card &upcard, bool is_dealer,
                           int round, Suit &order_up_suit) const override{
@@ -32,79 +33,92 @@ class SimplePlayer : public Player {
             if(round ==1){
                 int count = 0;
                 for (int i = 0; i<hand.size(); i++){
-                    if ((hand[i].is_face_or_ace()&&hand[i].is_trump(upcard.get_suit()))||hand[i].is_left_bower(upcard.get_suit())){
+                    if ((hand[i].is_face_or_ace()&&hand[i].is_trump(upcard.get_suit()))||
+                    hand[i].is_left_bower(upcard.get_suit(upcard.get_suit()))){
                         count+=1;
-                    if (count>=2){
-                        order_up_suit = upcard.get_suit();
                     }
-                    else {
-                        return false;
-                    }
-                    }
+
                 }
+                if (count>=2){
+                    order_up_suit = upcard.get_suit();
+                    return true;
+                    }
+                return false;
             }
-            else if (round == 2){
-                std::sort(hand.begin(),hand.end()); 
-                if (is_dealer){
+            if (is_dealer){
+                order_up_suit = Suit_next(upcard.get_suit());
+                return true;
+            }
+            for (int i = 0; i<hand.size(); i++){
+                if ((hand[i].is_trump(Suit_next(upcard.get_suit())) && hand[i].is_face_or_ace())
+                || hand[i].is_left_bower(upcard.get_suit())) {
                     order_up_suit = Suit_next(upcard.get_suit());
-                }
-                for (int i = 0; i<hand.size(); i++){
-                    if ((hand[i].is_trump(upcard.get_suit()) && hand[i].is_face_or_ace())
-                    || hand[i].is_left_bower(upcard.get_suit())) {
-                        order_up_suit = Suit_next(upcard.get_suit());
-                        return true;
-                    }
+                    return true;
                 }
             }
-                          }    
+            return false;
+        }
+
+        
         
 
         void add_and_discard(const Card &upcard) override{
-            hand.push_back(upcard);
-            std::sort(hand.begin(),hand.end()); 
+            add_card(upcard);
             hand.erase(hand.begin());
         }
 
         Card lead_card(Suit trump) override{
-            std::sort(hand.begin(),hand.end()); 
-            std::reverse(hand.begin(),hand.end());
-            int count = 0;
-
-            Card trump_card;
+            int ind = -1;
             for (int i = 0; i!=hand.size();i++){
-                if (!hand[i].is_trump(trump)){
-                    return hand[i];
-                    hand.erase(hand.begin()+i);
-                }
-                else{
-                    count+=1;
-                }
-            }
-            if (count ==hand.size()){
-                return hand[0];
-            }
 
-        }
+                if (!hand[i].is_trump(trump)&&(ind==-1||Card_less(hand[ind],hand[i],trump))){
+                    ind =i;
+                    }
+    
+
+            }
+            if (ind ==-1){
+                for (int i =0; i!=hand.size();i++){
+                    if (ind ==-1|| Card_less(hand[ind], hand[i],trump)){
+                    ind =i;
+                    }
+                }
+            }
+            Card Max = hand[ind];
+            hand.erase(hand.begin()+ind);
+            return Max;
+    }
+
 
         Card play_card(const Card &led_card, Suit trump)override{
-            std::sort(hand.begin(),hand.end());
-            std::reverse(hand.begin(),hand.end());
-            Card played;
-            int count = 0;
-            for (int i = 0; i!=hand.size(); i++){
+            assert(!hand.size()==0);
+            int ind = -1;
+            for(int i = 0; i!=hand.size(); i++){
                 if (hand[i].get_suit(trump)==led_card.get_suit(trump)){
-                    played = hand[i];
-                    hand.erase(hand.begin()+i);
-                    count+=1;
-                    return played;
+                    if (ind ==-1 || Card_less(hand[ind],hand[i],trump)){
+                        ind = i;
+                    }
+
                 }
             }
-            if (count==0){
-                played  = hand[0];
-                hand.erase(hand.begin());
-                return played;
+            int pick;
+            if (ind!=-1){
+                pick = ind;
             }
+            else {
+                int index2 = 0;
+                for (int i =0; i!=hand.size();i++){
+                    if (Card_less(hand[i],hand[index2],trump)){
+                        index2 = i;
+                    }
+                }
+                pick = index2;
+            }
+            Card Max = hand[pick];
+            hand.erase(hand.begin()+pick);
+            return Max;
         }
+            
         ~SimplePlayer()override {}
     };
 
@@ -123,6 +137,7 @@ class HumanPlayer: public Player{
             void add_card(const Card &c)override{
                 assert(hand.size()<MAX_HAND_SIZE);
                 hand.push_back(c);
+                std::sort(hand.begin(),hand.end()); 
                 
             }
 
@@ -150,7 +165,6 @@ class HumanPlayer: public Player{
 
             void add_and_discard(const Card &upcard) override{
                 add_card(upcard);
-                std::sort(hand.begin(),hand.end()); 
                 print_hand();
                 cout << "Discard upcard: [-1]\n";
                 cout << "Human player " << name << ", please select a card to discard:\n";
