@@ -3,7 +3,6 @@
 #include <iostream>
 #include <array>
 #include "Card.hpp"
-#include "Pack.hpp"
 #include <algorithm>
 
 using namespace std;
